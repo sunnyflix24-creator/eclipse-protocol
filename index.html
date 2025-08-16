@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECLIPSE PROTOCOL - CLASSIFIED</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono:wght@400&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: #0a0a0a;
+            color: #00ff41;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(0, 255, 65, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255, 0, 0, 0.05) 0%, transparent 50%),
+                linear-gradient(45deg, transparent 49%, rgba(0, 255, 65, 0.02) 50%, transparent 51%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .login-container {
+            background: rgba(10, 10, 10, 0.9);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.3);
+            text-align: center;
+            min-width: 400px;
+        }
+
+        .classified-banner {
+            background: #ff0000;
+            color: #ffffff;
+            padding: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .agency-logos {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .login-title {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px #00ff41;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff41;
+            border-radius: 5px;
+            color: #00ff41;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .login-input:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff0000, #cc0000);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(45deg, #cc0000, #990000);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+
+        .main-system {
+            display: none;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .main-system.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .header {
+            background: rgba(10, 10, 10, 0.9);
+            border-bottom: 2px solid #00ff41;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            text-shadow: 0 0 20px #00ff41;
+            letter-spacing: 3px;
+        }
+
+        .security-level {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff0000;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .status-bar {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+
+        .status-online { background: #00ff41; }
+        .status-secure { background: #ffff00; }
+        .status-satellite { background: #ff6600; }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+        }
+
+        .panel-header {
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            color: #ff6600;
+        }
+
+        .upload-zone {
+            border: 2px dashed #00ff41;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(0, 255, 65, 0.05);
+        }
+
+        .upload-zone:hover {
+            border-color: #ff6600;
+            background: rgba(255, 102, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .upload-zone.dragover {
+            border-color: #ffff00;
+            background: rgba(255, 255, 0, 0.1);
+        }
+
+        .satellite-status {
+            margin-bottom: 20px;
+        }
+
+        .satellite-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            border-left: 3px solid #00ff41;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #333, #555);
+            color: #00ff41;
+            border: 1px solid #00ff41;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Share Tech Mono', monospace;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            background: linear-gradient(45deg, #00ff41, #009930);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+        }
+
+        .btn-danger {
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(45deg, #ff0000, #cc0000);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+
+        .btn-warning {
+            border-color: #ffff00;
+            color: #ffff00;
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(45deg, #ffff00, #cccc00);
+            color: #000;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
+        }
+
+        .file-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            margin: 5px 0;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 5px;
+            border-left: 3px solid #333;
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover {
+            border-left-color: #00ff41;
+            background: rgba(0, 255, 65, 0.1);
+            transform: translateX(5px);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        .file-classification {
+            background: #ff0000;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            margin-right: 10px;
+        }
+
+        .terminal {
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            border: 1px solid #00ff41;
+        }
+
+        .terminal-line {
+            margin: 5px 0;
+            opacity: 0;
+            animation: typewriter 0.5s ease forwards;
+        }
+
+        @keyframes typewriter {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff41;
+            border-radius: 5px;
+            color: #00ff41;
+            font-family: 'Share Tech Mono', monospace;
+            margin-bottom: 20px;
+        }
+
+        .encryption-status {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: rgba(255, 102, 0, 0.1);
+            border-radius: 5px;
+            border: 1px solid #ff6600;
+            margin-bottom: 20px;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+            color: #ff0000;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+            border: 1px solid #333;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff41, #009930);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        .glitch {
+            animation: glitch 2s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translateX(0); }
+            10% { transform: translateX(-2px); }
+            20% { transform: translateX(2px); }
+            30% { transform: translateX(-1px); }
+            40% { transform: translateX(1px); }
+            50% { transform: translateX(-1px); }
+            60% { transform: translateX(1px); }
+            70% { transform: translateX(-2px); }
+            80% { transform: translateX(2px); }
+            90% { transform: translateX(-1px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-container">
+            <div class="classified-banner">● CLASSIFIED ● TOP SECRET ● CLASSIFIED ●</div>
+            <div class="agency-logos">
+                <span>CIA</span>
+                <span>NSA</span>
+                <span>KGB</span>
+                <span>MI6</span>
+                <span>MOSSAD</span>
+            </div>
+            <h1 class="login-title">ECLIPSE PROTOCOL</h1>
+            <p style="margin-bottom: 30px; opacity: 0.8;">SECURE FILE TRANSMISSION SYSTEM</p>
+            <input type="password" class="login-input" id="passwordInput" placeholder="ENTER CLEARANCE CODE" autocomplete="off">
+            <button class="login-btn" onclick="authenticate()">ACCESS SYSTEM</button>
+            <div style="margin-top: 20px; font-size: 0.8rem; opacity: 0.6;">
+                UNAUTHORIZED ACCESS IS PROHIBITED<br>
+                ALL ACTIVITIES ARE MONITORED
+            </div>
+        </div>
+    </div>
+
+    <!-- Main System -->
+    <div class="main-system" id="mainSystem">
+        <div class="header">
+            <button class="logout-btn" onclick="logout()">LOGOUT</button>
+            <div class="security-level">CLEARANCE: COSMIC</div>
+            <h1 class="glitch">ECLIPSE PROTOCOL</h1>
+            <p>CLASSIFIED FILE TRANSMISSION NETWORK</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-indicator status-online"></div>
+                <span>NETWORK: SECURE</span>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator status-secure"></div>
+                <span>ENCRYPTION: AES-256</span>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator status-satellite"></div>
+                <span>SATELLITE: ACTIVE</span>
+            </div>
+            <div class="status-item">
+                <span id="systemTime"></span>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="main-grid">
+                <!-- Upload Panel -->
+                <div class="panel">
+                    <div class="panel-header">📡 FILE TRANSMISSION</div>
+                    <div class="upload-zone" id="uploadZone">
+                        <div style="font-size: 2rem; margin-bottom: 15px;">🛰️</div>
+                        <div>DROP CLASSIFIED FILES</div>
+                        <div style="font-size: 0.8rem; margin-top: 10px; opacity: 0.7;">
+                            SECURE CHANNEL ACTIVE
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" style="display: none;" multiple>
+                    <button class="btn" style="width: 100%; margin-top: 15px;" onclick="document.getElementById('fileInput').click()">
+                        SELECT FILES
+                    </button>
+
+                    <div class="encryption-status">
+                        <div>
+                            <strong>STORAGE:</strong>
+                            <span id="storageUsed">0 MB</span> / 10 GB
+                        </div>
+                        <div>
+                            <strong>FILES:</strong>
+                            <span id="fileCount">0</span>
+                        </div>
+                    </div>
+
+                    <div id="uploadProgress" class="progress-bar" style="display: none;">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+
+                <!-- File Management -->
+                <div class="panel">
+                    <div class="panel-header">📂 CLASSIFIED ARCHIVES</div>
+                    <input type="text" class="search-input" id="searchInput" placeholder="SEARCH CLASSIFIED FILES...">
+                    
+                    <div class="file-list" id="fileList">
+                        <div style="text-align: center; padding: 50px 20px; opacity: 0.6;">
+                            <div style="font-size: 3rem; margin-bottom: 20px;">📁</div>
+                            <div>NO CLASSIFIED FILES DETECTED</div>
+                            <div style="font-size: 0.8rem; margin-top: 10px;">
+                                INITIATE SECURE TRANSMISSION
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Satellite Network -->
+                <div class="panel">
+                    <div class="panel-header">🛰️ SATELLITE NETWORK</div>
+                    <div class="satellite-status">
+                        <div class="satellite-item">
+                            <span>KEYHOLE-12</span>
+                            <span style="color: #00ff41;">ONLINE</span>
+                        </div>
+                        <div class="satellite-item">
+                            <span>LACROSSE-5</span>
+                            <span style="color: #00ff41;">ACTIVE</span>
+                        </div>
+                        <div class="satellite-item">
+                            <span>ECHELON-3</span>
+                            <span style="color: #ffff00;">STANDBY</span>
+                        </div>
+                        <div class="satellite-item">
+                            <span>MAGNUM-7</span>
+                            <span style="color: #ff6600;">SCANNING</span>
+                        </div>
+                    </div>
+
+                    <div class="panel-header">🖥️ SYSTEM TERMINAL</div>
+                    <div class="terminal" id="terminal">
+                        <div class="terminal-line">[SYSTEM] Eclipse Protocol initialized</div>
+                        <div class="terminal-line">[CRYPTO] AES-256 encryption active</div>
+                        <div class="terminal-line">[NETWORK] Secure channels established</div>
+                        <div class="terminal-line">[SATELLITE] Network synchronization complete</div>
+                        <div class="terminal-line">[STATUS] System ready for operations</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class EclipseProtocol {
+            constructor() {
+                this.files = [];
+                this.storageUsed = 0;
+                this.maxStorage = 10 * 1024 * 1024 * 1024; // 10GB
+                this.classifications = ['TOP SECRET', 'SECRET', 'CONFIDENTIAL', 'CLASSIFIED'];
+                this.terminal = document.getElementById('terminal');
+                this.init();
+            }
+
+            init() {
+                this.updateSystemTime();
+                setInterval(() => this.updateSystemTime(), 1000);
+                this.setupEventListeners();
+                this.updateStorageInfo();
+                this.startTerminalActivity();
+            }
+
+            updateSystemTime() {
+                const now = new Date();
+                const timeStr = now.toLocaleString('en-US', {
+                    timeZone: 'UTC',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                document.getElementById('systemTime').textContent = `UTC: ${timeStr}`;
+            }
+
+            startTerminalActivity() {
+                const activities = [
+                    '[SATELLITE] Data stream intercepted',
+                    '[CRYPTO] Decryption in progress...',
+                    '[NETWORK] Routing through proxy nodes',
+                    '[SECURITY] Biometric scan verified',
+                    '[SYSTEM] Background processes running',
+                    '[INTEL] Signal analysis complete',
+                    '[COMMS] Secure channel maintained',
+                    '[DATA] Packet transmission verified'
+                ];
+
+                setInterval(() => {
+                    const activity = activities[Math.floor(Math.random() * activities.length)];
+                    this.logToTerminal(activity);
+                }, 5000 + Math.random() * 10000);
+            }
+
+            logToTerminal(message) {
+                const line = document.createElement('div');
+                line.className = 'terminal-line';
+                line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                this.terminal.appendChild(line);
+                
+                if (this.terminal.children.length > 20) {
+                    this.terminal.removeChild(this.terminal.firstChild);
+                }
+                
+                this.terminal.scrollTop = this.terminal.scrollHeight;
+            }
+
+            setupEventListeners() {
+                const uploadZone = document.getElementById('uploadZone');
+                const fileInput = document.getElementById('fileInput');
+                const searchInput = document.getElementById('searchInput');
+
+                uploadZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadZone.classList.add('dragover');
+                });
+
+                uploadZone.addEventListener('dragleave', () => {
+                    uploadZone.classList.remove('dragover');
+                });
+
+                uploadZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadZone.classList.remove('dragover');
+                    const files = Array.from(e.dataTransfer.files);
+                    this.handleFiles(files);
+                });
+
+                uploadZone.addEventListener('click', () => {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', (e) => {
+                    const files = Array.from(e.target.files);
+                    this.handleFiles(files);
+                    e.target.value = '';
+                });
+
+                searchInput.addEventListener('input', (e) => {
+                    this.searchFiles(e.target.value);
+                });
+            }
+
+            handleFiles(files) {
+                files.forEach(file => {
+                    if (this.storageUsed + file.size > this.maxStorage) {
+                        this.logToTerminal(`[ERROR] File "${file.name}" exceeds storage capacity`);
+                        return;
+                    }
+
+                    this.uploadFile(file);
+                });
+            }
+
+            uploadFile(file) {
+                const fileObj = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    uploadDate: new Date(),
+                    classification: this.classifications[Math.floor(Math.random() * this.classifications.length)],
+                    data: file,
+                    encrypted: true
+                };
+
+                this.logToTerminal(`[UPLOAD] Initiating secure transmission: ${file.name}`);
+                this.showProgress();
+                
+                setTimeout(() => {
+                    this.files.push(fileObj);
+                    this.storageUsed += file.size;
+                    this.hideProgress();
+                    this.updateStorageInfo();
+                    this.renderFiles();
+                    this.logToTerminal(`[SUCCESS] File classified and archived: ${file.name}`);
+                }, 2000 + Math.random() * 3000);
+            }
+
+            showProgress() {
+                const progressBar = document.getElementById('uploadProgress');
+                const progressFill = document.getElementById('progressFill');
+                
+                progressBar.style.display = 'block';
+                let progress = 0;
+                
+                const interval = setInterval(() => {
+                    progress += Math.random() * 25;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                    }
+                    progressFill.style.width = progress + '%';
+                }, 300);
+            }
+
+            hideProgress() {
+                setTimeout(() => {
+                    document.getElementById('uploadProgress').style.display = 'none';
+                    document.getElementById('progressFill').style.width = '0%';
+                }, 500);
+            }
+
+            deleteFile(fileId) {
+                const fileIndex = this.files.findIndex(f => f.id === fileId);
+                if (fileIndex > -1) {
+                    const file = this.files[fileIndex];
+                    this.storageUsed -= file.size;
+                    this.files.splice(fileIndex, 1);
+                    this.updateStorageInfo();
+                    this.renderFiles();
+                    this.logToTerminal(`[DELETED] File purged from archives: ${file.name}`);
+                }
+            }
+
+            downloadFile(fileId) {
+                const file = this.files.find(f => f.id === fileId);
+                if (file) {
+                    this.logToTerminal(`[DOWNLOAD] Initiating secure extraction: ${file.name}`);
+                    const url = URL.createObjectURL(file.data);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = file.name;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    this.logToTerminal(`[SUCCESS] File extracted successfully`);
+                }
+            }
+
+            getFileIcon(type) {
+                if (type.startsWith('image/')) return '📷';
+                if (type.startsWith('video/')) return '🎬';
+                if (type.startsWith('audio/')) return '🎵';
+                if (type.includes('pdf')) return '📄';
+                if (type.includes('word') || type.includes('document')) return '📝';
+                if (type.includes('excel') || type.includes('spreadsheet')) return '📊';
+                if (type.includes('zip') || type.includes('rar')) return '📦';
+                return '📄';
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            formatDate(date) {
+                return date.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            updateStorageInfo() {
+                document.getElementById('storageUsed').textContent = this.formatFileSize(this.storageUsed);
+                document.getElementById('fileCount').textContent = this.files.length;
+            }
+
+            searchFiles(query) {
+                const filteredFiles = query.trim() === '' ? this.files : 
+                    this.files.filter(file => 
+                        file.name.toLowerCase().includes(query.toLowerCase())
+                    );
+                this.renderFiles(filteredFiles);
+            }
+
+            renderFiles(files = this.files) {
+                const fileList = document.getElementById('fileList');
+                
+                if (files.length === 0) {
+                    fileList.innerHTML = `
+                        <div style="text-align: center; padding: 50px 20px; opacity: 0.6;">
+                            <div style="font-size: 3rem; margin-bottom: 20px;">📁</div>
+                            <div>${this.files.length === 0 ? 'NO CLASSIFIED FILES DETECTED' : 'NO MATCHING FILES FOUND'}</div>
+                            <div style="font-size: 0.8rem; margin-top: 10px;">
+                                ${this.files.length === 0 ? 'INITIATE SECURE TRANSMISSION' : 'ADJUST SEARCH PARAMETERS'}
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const filesHTML = files.map(file => `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <div class="file-classification">${file.classification}</div>
+                            <div style="margin-right: 15px; font-size: 1.2rem;">
+                                ${this.getFileIcon(file.type)}
+                            </div>
+                            <div>
+                                <div style="font-weight: bold; color: #00ff41;">${file.name}</div>
+                                <div style="font-size: 0.8rem; opacity: 0.7;">
+                                    ${this.formatFileSize(file.size)} • ${this.formatDate(file.uploadDate)}
+                                    ${file.encrypted ? ' • 🔒 ENCRYPTED' : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-warning" style="padding: 8px 15px; font-size: 0.8rem;" onclick="protocol.downloadFile(${file.id})">
+                                EXTRACT
+                            </button>
+                            <button class="btn btn-danger" style="padding: 8px 15px
